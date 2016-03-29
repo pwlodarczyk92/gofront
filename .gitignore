@@ -1,0 +1,4 @@
+static/build-main.js
+static/build-main.js.map
+src/typescript/*.js
+src/typescript/*.js.map
