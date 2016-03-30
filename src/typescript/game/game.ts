@@ -59,6 +59,11 @@ module GAME {
 
 		}
 
+		public close = (): void => {
+			this.remaining += 1;
+			this.canvelem.onclick = null;
+		}
+
 		public render = (data: Gamedata): void => {
 			this.lastdata = data;
 			this.redraw();

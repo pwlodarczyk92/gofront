@@ -6,6 +6,7 @@ module CONFIG {
 		game_error: "Nie udało się pobrać danych o grze.",
 		illegal_move: "Ruch niedozwolony.",
 		move_error: "Serwer nie przyjął danych o ruchu.",
+		mkgame_error: "Wybranie gry nie jest możliwe",
 		curr_player: "Obecny gracz: ",
 		passed_moves: "Pominięte ruchy: ",
 	}
@@ -15,8 +16,11 @@ module CONFIG {
 		refrbtn: "refrbtn",
 		passbtn: "passbtn",
 		undobtn: "undobtn",
+		setbtn: "setbtn",
 		player: "gameplayer",
 		passed: "gamepasses",
+		gameid: "gameid",
+		currgameid: "currgameid"
 	}
 	export var vals = {
 		gameid: "default",
