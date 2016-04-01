@@ -5,8 +5,11 @@ module GAME {
 
 	export interface Gamedata {
 		stones: Stone[][]
+		scores?: number[][]
 		current: Stone
 		passes: number
+		whitepoints: number
+		blackpoints: number
 	}
 
 	export interface Position {
@@ -23,6 +26,7 @@ module GAME {
 		private onload: () => any;
 		private onclick: (position: Position) => any;
 
+		private colmem: string[];
 		private lastdata: Gamedata;
 		private remaining: number;
 		private prepare = (ev) => { 
@@ -35,17 +39,23 @@ module GAME {
 			private whiteurl: string,
 			private blackurl: string,
 			private backgurl: string,
-			private bgcolor: string,
-			private tilesize: number) {
+			private tilesize: number,
+			private bgcolor: UTILS.Color,
+			private bscorecol?: UTILS.Color,
+			private wscorecol?: UTILS.Color) {
 
 			this.canvelem.width = 19 * this.tilesize;
 			this.canvelem.height = 19 * this.tilesize;
 			this.canvelem.onclick = this.call;
 
 			this.remaining = 5;	
-			this.lastdata = { "stones": UTILS.fillarr(UTILS.fillarr(Stone.Pusty, 19), 19), 
+			this.lastdata = { 
+												"stones": UTILS.fillarr(UTILS.fillarr(Stone.Pusty, 19), 19), 
 											  "current": Stone.Czarny, 
-											  "passes": 0}
+												"passes": 0,
+												"whitepoints": 0,
+												"blackpoints": 0
+											}
 
 			this.whiteimg = document.createElement("img");
 			this.blackimg = document.createElement("img");
@@ -56,6 +66,13 @@ module GAME {
 			this.whiteimg.src = whiteurl;
 			this.blackimg.src = blackurl;
 			this.backgimg.src = backgurl;
+
+			if ((typeof this.wscorecol === 'undefined') || (typeof this.bscorecol === 'undefined')) {
+				this.wscorecol = this.bgcolor;
+				this.bscorecol = this.bgcolor;
+			}
+
+			this.colmem = [];
 
 		}
 
@@ -75,26 +92,58 @@ module GAME {
 			var ctx = this.canvelem.getContext("2d");
 			var tilesize = this.tilesize;
 
-			ctx.fillStyle = this.bgcolor;
+			ctx.fillStyle = UTILS.rgb_to_hex(this.bgcolor);
+			console.log(JSON.stringify(this.bgcolor))
 			ctx.fillRect(0, 0, tilesize * 19, tilesize * 19);
+
+			if (!(typeof data.scores === 'undefined')) {
+
+				this.pertile((x, y, xpos, ypos) => {
+
+					var score: number = data.scores[x][y];
+					if (score === null) return;
+					var discretescore: number = Math.round(128 * score);
+					score = discretescore / 128.0;
+
+					var col: string;
+					if (this.colmem[discretescore] !== undefined)
+						col = this.colmem[discretescore]
+					else {
+						var rgbcol: UTILS.Color = this.bgcolor;
+						if (discretescore < 0)
+							rgbcol = UTILS.mix(this.bscorecol, this.bgcolor, -score);
+						if (discretescore > 0)
+							rgbcol = UTILS.mix(this.wscorecol, this.bgcolor, score);
+						col = UTILS.rgb_to_hex(rgbcol);
+						this.colmem[discretescore] = col;
+					}
+
+					ctx.fillStyle = col;
+					ctx.fillRect(xpos, ypos, tilesize, tilesize);
+
+				});
+
+			}
+
 			ctx.drawImage(this.backgimg, 0, 0, tilesize * 19, tilesize * 19);
 
+			this.pertile((x, y, xpos, ypos) => {
+				switch (data.stones[x][y]) {
+					case Stone.Czarny:
+						ctx.drawImage(this.blackimg, xpos, ypos, tilesize, tilesize);
+						break;
+					case Stone.Biały:
+						ctx.drawImage(this.whiteimg, xpos, ypos, tilesize, tilesize);
+						break;
+				}
+			});
+
+		}
+
+		private pertile = (call: (x: number, y: number, xpos: number, ypos: number) => any) => {
 			for (var i = 18; i >= 0; i--) {
 				for (var j = 18; j >= 0; j--) {
-
-					var x = i * tilesize;
-					var y = j * tilesize;
-
-					var img;
-					switch (data.stones[i][j]) {
-						case Stone.Czarny:
-							ctx.drawImage(this.blackimg, x, y, tilesize, tilesize);
-							break;
-						case Stone.Biały:
-							ctx.drawImage(this.whiteimg, x, y, tilesize, tilesize);
-							break;
-					}
-					
+					call(i, j, i * this.tilesize, j * this.tilesize);
 				}
 			}
 		}

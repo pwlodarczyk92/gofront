@@ -6,6 +6,14 @@ module MAIN {
 
   interface QueryObj {
     id: string;
+    score?: string;
+  }
+
+  interface GameDataFront {
+    passelem: HTMLParagraphElement;
+    playerelem: HTMLParagraphElement;
+    bpointselem: HTMLParagraphElement;
+    wpointselem: HTMLParagraphElement;
   }
 
   export class Page {
@@ -15,14 +23,18 @@ module MAIN {
     private passbtn: HTMLButtonElement;
     private undobtn: HTMLButtonElement;
     private setbtn: HTMLButtonElement;
-    private passelem: HTMLParagraphElement;
-    private playerelem: HTMLParagraphElement;
+    private scorebtn: HTMLButtonElement;
+
+    private frontdata: GameDataFront;
+
     private idelem: HTMLInputElement;
     private curridelem: HTMLParagraphElement;
+    private scoreelem: HTMLInputElement;
     private gameurl: string;
 
     private gamedict: QueryObj;
-    private newgdict: QueryObj;
+    private getdict: QueryObj;
+    private newgamedict: QueryObj;
 
     private game: GAME.GameCanvas;
 
@@ -43,16 +55,28 @@ module MAIN {
       this.passbtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.passbtn);
       this.undobtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.undobtn);
       this.setbtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.setbtn);
-      this.passelem = <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed);
-      this.playerelem = <HTMLParagraphElement>document.getElementById(CONFIG.ids.player);
+      this.scorebtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.scorebtn);
+
+      this.frontdata = 
+      { 
+        "passelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed),
+        "playerelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.player),
+        "bpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.bpoints),
+        "wpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.wpoints)
+      }
+
       this.idelem = <HTMLInputElement>document.getElementById(CONFIG.ids.gameid);
       this.curridelem = <HTMLParagraphElement>document.getElementById(CONFIG.ids.currgameid);
+      this.scoreelem = <HTMLInputElement>document.getElementById(CONFIG.ids.scoreid);
+
       this.gameurl = CONFIG.urls.gameurl;
 
       this.idelem.value = CONFIG.vals.gameid
       this.curridelem.textContent = "Obecna gra: " + CONFIG.vals.gameid;
+
       this.gamedict = { "id": CONFIG.vals.gameid };
-      this.newgdict = this.gamedict;
+      this.getdict = { "id": CONFIG.vals.gameid };
+      this.newgamedict = this.gamedict;
 
       var startcallback = mkgame_callback(this.gameurl, () => { this.setup_page(); });
       HTTP.httpAsync(this.gameurl, this.gamedict, "PUT", startcallback);
@@ -62,14 +86,14 @@ module MAIN {
     private setup_page() {
       this.game = new GAME.GameCanvas(this.gamecanvas,
         CONFIG.urls.whitepath, CONFIG.urls.blackpath, CONFIG.urls.backgpath,
-        CONFIG.vals.bgcolor, CONFIG.vals.tilesize); 
+        CONFIG.vals.tilesize, CONFIG.vals.bgcolor, CONFIG.vals.wcol, CONFIG.vals.bcol); 
 
       this.mk_callback = mkgame_callback(this.gameurl, () => { this.restart();});
-      this.st_callback = state_update_callback(this.playerelem, this.passelem, this.game);
-      this.mv_callback = move_callback(this.gameurl, this.gamedict, this.st_callback);
+      this.st_callback = state_update_callback(this.frontdata, this.game);
+      this.mv_callback = move_callback(this.gameurl, this.getdict, this.st_callback);
 
-      this.request_mkgame = () => { HTTP.httpAsync(this.gameurl, this.newgdict, "PUT", this.mk_callback); };
-      this.request_st_update = () => { HTTP.httpAsync(this.gameurl, this.gamedict, "GET", this.st_callback) }
+      this.request_mkgame = () => { HTTP.httpAsync(this.gameurl, this.newgamedict, "PUT", this.mk_callback); };
+      this.request_st_update = () => { HTTP.httpAsync(this.gameurl, this.getdict, "GET", this.st_callback) }
       this.request_pass = () => { HTTP.httpPostAsync(this.gameurl, this.gamedict, { action: "pass" }, this.mv_callback); }
       this.request_undo = () => { HTTP.httpPostAsync(this.gameurl, this.gamedict, { action: "undo" }, this.mv_callback); }
       this.request_move = (position: GAME.Position) =>
@@ -78,12 +102,13 @@ module MAIN {
       this.refrbtn.onclick = this.request_st_update;
       this.passbtn.onclick = this.request_pass;
       this.undobtn.onclick = this.request_undo;
+      this.scorebtn.onclick = () => { this.getdict.score = this.scoreelem.value; this.request_st_update(); }
 
       this.game.setonclick(this.request_move);
       this.game.setonload(this.request_st_update);
 
       this.setbtn.onclick = () => {
-        this.newgdict = { "id": this.idelem.value };
+        this.newgamedict = { "id": this.idelem.value };
         this.request_mkgame();
       }
 
@@ -94,14 +119,15 @@ module MAIN {
       this.undobtn.onclick = null;
       this.passbtn.onclick = null;
       this.refrbtn.onclick = null;
-      this.gamedict = this.newgdict;
+      this.gamedict.id = this.newgamedict.id;
+      this.getdict.id = this.newgamedict.id;
       this.curridelem.textContent = "Obecna gra: " + this.gamedict.id;
       this.setup_page();
     }
 
   }
 
-  function state_update_callback(playerelem: HTMLParagraphElement, passelem: HTMLParagraphElement, game: GAME.GameCanvas) {
+  function state_update_callback(datafront: GameDataFront, game: GAME.GameCanvas) {
     
     var result = (response: HTTP.Response) => {
 
@@ -112,14 +138,17 @@ module MAIN {
 
       var data = <GAME.Gamedata>JSON.parse(response.text);
       game.render(data);
-      playerelem.innerHTML = CONFIG.msgs.curr_player + GAME.Stone[data.current];
-      passelem.innerHTML = CONFIG.msgs.passed_moves + data.passes.toString();
+
+      datafront.playerelem.innerHTML = CONFIG.msgs.curr_player + GAME.Stone[data.current];
+      datafront.passelem.innerHTML = CONFIG.msgs.passed_moves + data.passes.toString();
+      datafront.bpointselem.innerHTML = CONFIG.msgs.bpoints + data.blackpoints.toString();
+      datafront.wpointselem.innerHTML = CONFIG.msgs.wpoints + data.whitepoints.toString();
 
     };
     return result;
   }
 
-  function move_callback(gameurl: string, gamedict: Object, statecall: (response: HTTP.Response) => any) {
+  function move_callback(gameurl: string, gamedict: QueryObj, statecall: (response: HTTP.Response) => any) {
 
     var result = (response: HTTP.Response) => {
 
