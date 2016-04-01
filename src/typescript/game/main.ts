@@ -102,7 +102,11 @@ module MAIN {
       this.refrbtn.onclick = this.request_st_update;
       this.passbtn.onclick = this.request_pass;
       this.undobtn.onclick = this.request_undo;
-      this.scorebtn.onclick = () => { this.getdict.score = this.scoreelem.value; this.request_st_update(); }
+      this.scorebtn.onclick = () => { 
+        this.getdict.score = this.scoreelem.value; 
+        if (this.getdict.score === "") delete this.getdict.score;
+        this.request_st_update(); 
+      }
 
       this.game.setonclick(this.request_move);
       this.game.setonload(this.request_st_update);
