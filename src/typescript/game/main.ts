@@ -143,8 +143,8 @@ module MAIN {
       var data = <GAME.Gamedata>JSON.parse(response.text);
       game.render(data);
 
-      datafront.playerelem.innerHTML = CONFIG.msgs.curr_player + GAME.Stone[data.current];
-      datafront.passelem.innerHTML = CONFIG.msgs.passed_moves + data.passes.toString();
+      datafront.playerelem.innerHTML = CONFIG.msgs.curr_player + GAME.Stone[data.currentstone];
+      datafront.passelem.innerHTML = CONFIG.msgs.passed_moves + data.passcounter.toString();
       datafront.bpointselem.innerHTML = CONFIG.msgs.bpoints + data.blackpoints.toString();
       datafront.wpointselem.innerHTML = CONFIG.msgs.wpoints + data.whitepoints.toString();
 

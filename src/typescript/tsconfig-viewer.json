@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "sourceMap":  true,
+    "outDir": "../../static/",
+    "outFile":"../../static/viewer-main.js"
+  },
+  "files": [
+    "main-viewer.ts"
+  ]
+}

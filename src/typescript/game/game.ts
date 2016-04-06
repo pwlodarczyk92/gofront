@@ -6,8 +6,8 @@ module GAME {
 	export interface Gamedata {
 		stones: Stone[][]
 		scores?: number[][]
-		current: Stone
-		passes: number
+		currentstone: Stone
+		passcounter: number
 		whitepoints: number
 		blackpoints: number
 	}
@@ -51,8 +51,8 @@ module GAME {
 			this.remaining = 5;	
 			this.lastdata = { 
 												"stones": UTILS.fillarr(UTILS.fillarr(Stone.Pusty, 19), 19), 
-											  "current": Stone.Czarny, 
-												"passes": 0,
+											  "currentstone": Stone.Czarny, 
+												"passcounter": 0,
 												"whitepoints": 0,
 												"blackpoints": 0
 											}
