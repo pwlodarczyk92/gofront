@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"sourceMap":  true,
-		"outDir": "../../static/",
-		"outFile":"../../static/build-main.js"
+		"outDir": "../../content/static/",
+		"outFile":"../../content/static/build-main.js"
 	},
 	"files": [
 		"main.ts"

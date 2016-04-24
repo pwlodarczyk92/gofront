@@ -1,6 +1,6 @@
-static/build-main.js
-static/build-main.js.map
-static/viewer-main.js
-static/viewer-main.js.map
+content/static/build-main.js
+content/static/build-main.js.map
+content/static/viewer-main.js
+content/static/viewer-main.js.map
 src/typescript/*.js
 src/typescript/*.js.map

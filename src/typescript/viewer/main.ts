@@ -39,10 +39,10 @@ module VIEWER {
 
       this.frontdata =
 				{
-					"passelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed),
-					"playerelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.player),
-					"bpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.bpoints),
-					"wpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.wpoints)
+					passelem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed),
+					playerelem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.player),
+					bpointselem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.bpoints),
+					wpointselem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.wpoints)
 				}
 
       this.setup_page();
@@ -79,8 +79,10 @@ module VIEWER {
 
 					console.log("parsing started");
 					var output = <string>(<any>e.target).result;
+          // output should be a json list without braces and with additional leading comma and space
+          // for exmaple ", <data>, <data>". all newline symbols are removed.
           output = output.replace(/(\r\n|\n|\r)/gm, "");
-          output = "[" + output.substr(2) + "]"; 
+          output = "[" + output.substr(2) + "]";        
 					this.data = JSON.parse(output);
 					this.pos = 0;
 					this.state_update_call(this.data[0], this.frontdata, this.game)

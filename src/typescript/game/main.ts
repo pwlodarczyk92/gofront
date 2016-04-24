@@ -19,6 +19,7 @@ module MAIN {
   export class Page {
 
     private gamecanvas: HTMLCanvasElement;
+    private infoelem: HTMLParagraphElement;
     private refrbtn: HTMLButtonElement;
     private passbtn: HTMLButtonElement;
     private undobtn: HTMLButtonElement;
@@ -42,6 +43,7 @@ module MAIN {
     private st_callback: (response: HTTP.Response) => void;
     private mv_callback: (response: HTTP.Response) => void;
 
+    private set_info: (info: string) => void;
     private request_mkgame: () => void;
     private request_st_update: () => void;
     private request_pass: () => void;
@@ -51,6 +53,7 @@ module MAIN {
     constructor() {
 
       this.gamecanvas = <HTMLCanvasElement>document.getElementById(CONFIG.ids.canvas);
+      this.infoelem = <HTMLParagraphElement>document.getElementById(CONFIG.ids.info);
       this.refrbtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.refrbtn);
       this.passbtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.passbtn);
       this.undobtn = <HTMLButtonElement>document.getElementById(CONFIG.ids.undobtn);
@@ -59,10 +62,10 @@ module MAIN {
 
       this.frontdata = 
       { 
-        "passelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed),
-        "playerelem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.player),
-        "bpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.bpoints),
-        "wpointselem": <HTMLParagraphElement>document.getElementById(CONFIG.ids.wpoints)
+        passelem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.passed),
+        playerelem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.player),
+        bpointselem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.bpoints),
+        wpointselem: <HTMLParagraphElement>document.getElementById(CONFIG.ids.wpoints)
       }
 
       this.idelem = <HTMLInputElement>document.getElementById(CONFIG.ids.gameid);
@@ -72,11 +75,13 @@ module MAIN {
       this.gameurl = CONFIG.urls.gameurl;
 
       this.idelem.value = CONFIG.vals.gameid
-      this.curridelem.textContent = "Obecna gra: " + CONFIG.vals.gameid;
+      this.curridelem.textContent = CONFIG.msgs.curr_game + CONFIG.vals.gameid;
 
-      this.gamedict = { "id": CONFIG.vals.gameid };
-      this.getdict = { "id": CONFIG.vals.gameid };
+      this.gamedict = { id: CONFIG.vals.gameid };
+      this.getdict = { id: CONFIG.vals.gameid };
       this.newgamedict = this.gamedict;
+
+      this.set_info = (info: string) => { this.infoelem.textContent = info; }
 
       var startcallback = mkgame_callback(this.gameurl, () => { this.setup_page(); });
       HTTP.httpAsync(this.gameurl, this.gamedict, "PUT", startcallback);
@@ -86,7 +91,7 @@ module MAIN {
     private setup_page() {
       this.game = new GAME.GameCanvas(this.gamecanvas,
         CONFIG.urls.whitepath, CONFIG.urls.blackpath, CONFIG.urls.backgpath,
-        CONFIG.vals.tilesize, CONFIG.vals.bgcolor, CONFIG.vals.wcol, CONFIG.vals.bcol); 
+        CONFIG.vals.tilesize, CONFIG.vals.bgcolor, CONFIG.vals.wcol, CONFIG.vals.bcol, this.set_info); 
 
       this.mk_callback = mkgame_callback(this.gameurl, () => { this.restart();});
       this.st_callback = state_update_callback(this.frontdata, this.game);
@@ -171,7 +176,7 @@ module MAIN {
 
     var result = (response: HTTP.Response) => {
 
-      if (!(200 <= response.code && response.code < 300))
+      if (!(200 <= response.code && response.code < 300) && response.code != 409) // 409 -> game already exists
         window.alert(CONFIG.msgs.mkgame_error);
       else
         restartcall();

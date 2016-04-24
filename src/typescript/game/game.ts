@@ -28,10 +28,10 @@ module GAME {
 
 		private colmem: string[];
 		private lastdata: Gamedata;
-		private remaining: number;
+		private featsToBeLoaded: number;
 		private prepare = (ev) => { 
-			this.remaining--; if (this.remaining <= 0) this.onload(); 
-			console.log(this.remaining);
+			this.featsToBeLoaded--; if (this.featsToBeLoaded <= 0) this.onload(); 
+			console.log(this.featsToBeLoaded);
 		};
 
 		constructor(
@@ -42,13 +42,19 @@ module GAME {
 			private tilesize: number,
 			private bgcolor: UTILS.Color,
 			private bscorecol?: UTILS.Color,
-			private wscorecol?: UTILS.Color) {
+			private wscorecol?: UTILS.Color,
+			private infosetter? : (info: string) => void) {
 
 			this.canvelem.width = 19 * this.tilesize;
 			this.canvelem.height = 19 * this.tilesize;
 			this.canvelem.onclick = this.call;
+			this.canvelem.onmousemove = (ev: MouseEvent) => {
+				var pos = this.getTile(ev.clientX, ev.clientY);
+				if (this.lastdata.scores === undefined) return;
+				this.infosetter("score: " + this.lastdata.scores[pos.x][pos.y])
+			}
 
-			this.remaining = 5;	
+			this.featsToBeLoaded = 5;	
 			this.lastdata = { 
 												"stones": UTILS.fillarr(UTILS.fillarr(Stone.Pusty, 19), 19), 
 											  "currentstone": Stone.Czarny, 
@@ -77,7 +83,7 @@ module GAME {
 		}
 
 		public close = (): void => {
-			this.remaining += 1;
+			this.featsToBeLoaded += 1;
 			this.canvelem.onclick = null;
 		}
 
@@ -93,7 +99,6 @@ module GAME {
 			var tilesize = this.tilesize;
 
 			ctx.fillStyle = UTILS.rgb_to_hex(this.bgcolor);
-			console.log(JSON.stringify(this.bgcolor))
 			ctx.fillRect(0, 0, tilesize * 19, tilesize * 19);
 
 			if (!(typeof data.scores === 'undefined')) {
@@ -167,7 +172,7 @@ module GAME {
 
 		private call = (event: MouseEvent): void => {
 			var pos = this.getTile(event.clientX, event.clientY);
-			if (this.remaining <= 0) this.onclick(pos); 
+			if (this.featsToBeLoaded <= 0) this.onclick(pos); 
 		}
 
 	}
